@@ -1,3 +1,3 @@
 class AppConfig {
-  static const String baseUrl = 'https://SEU_DOMINIO.com.br/agendaja/api';
+  static const String baseUrl = 'https://mvsites.com.br/agendaja/api';
 }

@@ -2,7 +2,7 @@
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'marc4901_agendaja');
 define('DB_USER', 'marc4901_agendaja');
-define('DB_PASS', 'Ma35881706');
+define('DB_PASS', 'Ma35881706@');
 define('DB_CHARSET', 'utf8mb4');
 
 define('JWT_SECRET', 'agendaja_secret_key_2024_mude_esta_chave');
