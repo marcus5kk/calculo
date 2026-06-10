@@ -1,116 +1,151 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'models/usuario.dart';
+import 'services/api_service.dart';
+import 'screens/login_screen.dart';
+import 'screens/usuario_final/home_screen.dart';
+import 'screens/estabelecimento/home_screen.dart';
+import 'screens/funcionario/home_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const AgendaJaApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AgendaJaApp extends StatelessWidget {
+  const AgendaJaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Calculadora',
+      title: 'AgendaJá',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1565C0),
+          primary: const Color(0xFF1565C0),
+          secondary: const Color(0xFF42A5F5),
+        ),
+        useMaterial3: true,
+        fontFamily: 'Roboto',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1565C0),
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1565C0),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
       ),
-      home: const CalculatorPage(),
+      home: const SplashScreen(),
     );
   }
 }
 
-class CalculatorPage extends StatefulWidget {
-  const CalculatorPage({super.key});
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
 
   @override
-  State<CalculatorPage> createState() => _CalculatorPageState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _CalculatorPageState extends State<CalculatorPage> {
-  String display = '0';
-  double firstNumber = 0;
-  String operation = '';
-
-  void press(String value) {
-    setState(() {
-      if (value == 'C') {
-        display = '0';
-        firstNumber = 0;
-        operation = '';
-      } else if (['+', '-', '×', '÷'].contains(value)) {
-        firstNumber = double.parse(display);
-        operation = value;
-        display = '0';
-      } else if (value == '=') {
-        double secondNumber = double.parse(display);
-        double result = 0;
-
-        switch (operation) {
-          case '+':
-            result = firstNumber + secondNumber;
-            break;
-          case '-':
-            result = firstNumber - secondNumber;
-            break;
-          case '×':
-            result = firstNumber * secondNumber;
-            break;
-          case '÷':
-            result = secondNumber != 0
-                ? firstNumber / secondNumber
-                : 0;
-            break;
-        }
-
-        display = result.toString();
-      } else {
-        display = display == '0' ? value : display + value;
-      }
-    });
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _verificarLogin();
   }
 
-  Widget button(String text) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: ElevatedButton(
-          onPressed: () => press(text),
-          child: Text(
-            text,
-            style: const TextStyle(fontSize: 24),
-          ),
-        ),
-      ),
+  Future<void> _verificarLogin() async {
+    await Future.delayed(const Duration(seconds: 1));
+    final usuario = await ApiService.getUsuarioSalvo();
+
+    if (!mounted) return;
+
+    if (usuario != null) {
+      _navegarParaHome(usuario);
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
+  }
+
+  void _navegarParaHome(Usuario usuario) {
+    Widget home;
+    if (usuario.isEstabelecimento) {
+      home = EstabelecimentoHomeScreen(usuario: usuario);
+    } else if (usuario.isFuncionario) {
+      home = FuncionarioHomeScreen(usuario: usuario);
+    } else {
+      home = UsuarioFinalHomeScreen(usuario: usuario);
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => home),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Calculadora'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              alignment: Alignment.bottomRight,
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                display,
-                style: const TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                ),
+      backgroundColor: const Color(0xFF1565C0),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                Icons.calendar_month,
+                size: 60,
+                color: Color(0xFF1565C0),
               ),
             ),
-          ),
-          Row(children: [button('7'), button('8'), button('9'), button('÷')]),
-          Row(children: [button('4'), button('5'), button('6'), button('×')]),
-          Row(children: [button('1'), button('2'), button('3'), button('-')]),
-          Row(children: [button('C'), button('0'), button('='), button('+')]),
-        ],
+            const SizedBox(height: 24),
+            const Text(
+              'AgendaJá',
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Seu agendamento simplificado',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
+              ),
+            ),
+            const SizedBox(height: 48),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ],
+        ),
       ),
     );
   }
